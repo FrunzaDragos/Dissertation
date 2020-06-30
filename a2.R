@@ -14,7 +14,12 @@ library(leaflet.extras)
 library(rgdal)
 library(dplyr)
 library(shinyWidgets)
-eles<-read.csv(paste('./elemydatuse.csv', sep=''))
+
+
+eles<- read.csv(paste('./elemydatuse.csv', sep=''))
+roan <- read.csv(paste('./roanmydatuse.csv', sep=''))
+
+
 covar_shape<-readOGR(dsn = paste('./Shapes/covariate shape files', sep=''), layer = 'covariates_grid_ref')
 covardat<-covar_shape@data
 covardat<-data.frame(covardat, coordinates(covar_shape))
@@ -25,14 +30,27 @@ res <- spTransform(xy, CRS("+init=epsg:32733"))
 covardat$x.pos<- res@coords[,1]
 covardat$y.pos<- res@coords[,2]
 covardat$area<-0.25
+
+
 mapdata <- eles
 coordinates(mapdata) <- ~x.pos+y.pos #similar to SpatialPoints
 proj4string(mapdata) <- CRS("+proj=utm +zone=33 +south") #assign projection and coordinate reference system
 longlats <- spTransform(mapdata, CRS("+proj=longlat")) #transform
 longlats <- as.data.frame(longlats)
 
+mapdata <- roan
+coordinates(mapdata) <- ~x.pos+y.pos #similar to SpatialPoints
+proj4string(mapdata) <- CRS("+proj=utm +zone=33 +south") #assign projection and coordinate reference system
+longlats2 <- spTransform(mapdata, CRS("+proj=longlat")) #transform
+longlats2 <- as.data.frame(longlats2)
+
+
+
+
 ui <- fluidPage(
+  
   leafletOutput("mymap"),
+  
   leafletOutput("map2"),
   
   sliderTextInput(inputId = "slider1",
@@ -52,14 +70,27 @@ server <- function(input, output, session) {
       filter(yearmonth == input$slider1)
   })
   
+  filteredData2 <- reactive({
+    longlats2 %>%
+      filter(yearmonth == input$slider1)
+  })
+  
   output$mymap <- renderLeaflet({
     leaflet() %>% addTiles() %>%
       addHeatmap(data = filteredData(), lng = ~x.pos, lat = ~y.pos, intensity = ~response, radius=5, gradient = 'Reds', blur = 10,
-                 group = 'Response')
+                 group = 'Response Ele') %>%
+      addHeatmap(data = filteredData2(), lng = ~x.pos, lat = ~y.pos, intensity = ~response, radius=5, gradient = 'Blues', blur = 10,
+                 group = 'Response Roan') %>%
+      addLayersControl(
+        overlayGroups =c("Response Ele","Response Roan"),
+        options = layersControlOptions(collapsed=FALSE)
+      )
   })
+  
+  
   output$map2 <- renderLeaflet({
     leaflet() %>% addTiles() %>%
-      addHeatmap(data=longlats, lng = ~x.pos, lat = ~y.pos, intensity = ~mindistToWaters/1000, radius = 6, gradient = 'Blues',
+      addHeatmap(data=longlats, lng = ~x.pos, lat = ~y.pos, intensity = ~mindistToWaters/1000, radius = 6, gradient = 'Greys',
                  group = 'water') %>%
       addHeatmap(data=longlats, lng = ~x.pos, lat = ~y.pos, intensity = ~mindistToFence/1000, radius = 6, gradient = 'Greens',
                  group = 'fence') %>%
@@ -70,15 +101,17 @@ server <- function(input, output, session) {
         options = layersControlOptions(collapsed=FALSE)
       )
   })
-  
-}
 
     observe({
-      leafletProxy("mymap",data=filteredData()) %>%
+      leafletProxy("mymap") %>%
       clearHeatmap() %>%
-      addHeatmap(lng = ~x.pos, lat = ~y.pos, intensity = ~response, radius=5, gradient = 'Reds', blur = 10,
-              group = 'Response')
+      addHeatmap(data=filteredData(), lng = ~x.pos, lat = ~y.pos, intensity = ~response, radius=5, gradient = 'Reds', blur = 10,
+              group = 'Response Ele') %>%
+      addHeatmap(data=filteredData2(), lng = ~x.pos, lat = ~y.pos, intensity = ~response, radius=5, gradient = 'Blues', blur = 10,
+                   group = 'Response Roan')
 })
+    
+}
 
 #observe({
 #  leafletProxy("mymap") %>%
