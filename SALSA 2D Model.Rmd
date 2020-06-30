@@ -41,6 +41,8 @@ initialModel_eles <- glm(response ~ as.factor(yearmonth),
 
 varList <- c("mindistToWaters")
 
+factorList <- c("yearmonth")
+
 salsa1dlist<-list(fitnessMeasure="QAIC", minKnots_1d = c(1),
                   maxKnots_1d=c(4), startKnots_1d = c(1), degree=c(2),
                   maxIterations=100, gaps=c(0))
