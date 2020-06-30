@@ -1,0 +1,94 @@
+---
+title: "SALSA 2D Model"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(rgdal)
+library(rgeos)
+require(ggplot2)
+library(nlme)
+library(MuMIn)
+library(MRSea)
+path<-'C:/Users/Mircea/Documents/R Projects/Disso'
+```
+
+```{r}
+eles<-read.csv(paste('elemydatuse.csv', sep=''))
+roan<-read.csv(paste('roanmydatuse.csv', sep=''))
+
+grid_shape<-readOGR(paste(path, '/Khaudum_shapefiles', sep=''), layer='Khaudum_predgrid500m')
+predgrid<-grid_shape@data
+```
+
+```{r}
+#initial model for 1D SALSA
+
+initialModel_eles <- glm(response ~ as.factor(yearmonth), 
+                         offset=log(areakmsq), family=quasipoisson, 
+                         data=eles)
+```
+
+```{r}
+
+#1D SALSA
+#I am trying to get the most basic model to work, aka only for elephants and only considering the distance to water
+
+varList <- c("mindistToWaters")
+
+salsa1dlist<-list(fitnessMeasure="QAIC", minKnots_1d = c(1),
+                  maxKnots_1d=c(4), startKnots_1d = c(1), degree=c(2),
+                  maxIterations=100, gaps=c(0))
+
+salsa1dout<-runSALSA1D(initialModel_eles, salsa1dlist, varList,
+                       factorList, varlist_cyclicSplines = NULL,
+                       splineParams = NULL, datain=eles,
+                       suppress.printout = FALSE)
+
+bestModel1D<-salsa1dout$bestModel
+```
+
+```{r}
+# making the knot grid and distance matrix
+# should I use 'Khaudum_predgrid500m' instead?
+
+knotgrid<- getKnotgrid(coordData = cbind(eles$x.pos,
+                                         eles$y.pos))
+
+distMats <- makeDists(cbind(eles$x.pos, eles$y.pos),
+                      na.omit(knotgrid))
+
+```
+
+```{r}
+#2D SALSA
+#min knots = the number of water holes
+#when I ran this model it did not converge, with the error message attached in the e-mail/on teams
+#the model ran for about 8-9 hours twice, with the same error message
+
+
+
+salsa2dlist<-list(fitnessMeasure = "QAIC", knotgrid = knotgrid,
+                  startKnots=12, minKnots=12, maxKnots=20, gap=0,
+                  interactionTerm="yearmonth")
+
+salsa2dOutput<-runSALSA2D(bestModel1D, salsa2dlist,
+                          d2k=distMats$dataDist, k2k=distMats$knotDist,
+                          splineParams=NULL, tol=0, chooserad=F,
+                          panels=NULL, suppress.printout=FALSE)
+
+bestModel2D<-salsa2dOutput$bestModel
+```
+
+
+
+
+
+
+
+
