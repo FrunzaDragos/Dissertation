@@ -1,0 +1,236 @@
+---
+title: "Khaudum Covariates"
+author: 'Lindesay Scott-Hayward'
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+## Load Covariate and point data
+
+```{r}
+library(rgdal)
+library(rgeos)
+library(sp)
+require(ggplot2)
+
+path<-'C:/Users/drago/Documents/R Projects/Disso'
+```
+
++ read in the ele and roan data
+
+```{r}
+eles<-read.csv(paste('elemydatuse.csv', sep=''))
+roan<-read.csv(paste('roanmydatuse.csv', sep=''))
+```
+
+
++ read in the prediction grid
+
+```{r}
+grid_shape<-readOGR(paste(path, '/Khaudum_shapefiles', sep=''), layer='Khaudum_predgrid500m')
+predgrid<-grid_shape@data
+```
+
++ read in fire grid
+
+```{r}
+fire<-read.csv(paste(path, '/Shapefiles/Fire_500m_grid.csv', sep=''))
+```
+
+
++ read in the covariate shapefile
+
+```{r}
+covar_shape<-readOGR(dsn = paste(path,  '/covariate shape files', sep=''), layer = 'covariates_grid_ref')
+```
+
++ Extract variable data and coordinates
+
+```{r}
+covardat<-covar_shape@data
+covardat<-data.frame(covardat, coordinates(covar_shape))
+```
+
++ convert lats/longs to UTMs
+
+```{r}
+xy <- data.frame(ID = 1:nrow(covardat), X = covardat$coords.x1, Y = covardat$coords.x2)
+coordinates(xy) <- c("X", "Y")
+proj4string(xy) <- CRS("+proj=longlat +datum=WGS84")  ## for example
+res <- spTransform(xy, CRS("+init=epsg:32733"))
+covardat$x.pos<- res@coords[,1]
+covardat$y.pos<- res@coords[,2]
+covardat$area<-0.25
+```
+
+
+## Plot the Variables
+
+```{r, dev='png'}
+ggplot(covardat) + 
+  geom_tile(aes(x.pos/1000, y.pos/1000, fill=slope), height=0.5, width=0.5) +
+  theme_bw() + xlab('Easting (Km)') + ylab('Northing (Km)') +
+  coord_equal() +
+  ggtitle('Slope')
+```
+
+```{r, dev='png'}
+ggplot(covardat) + 
+  geom_tile(aes(x.pos/1000, y.pos/1000, fill=prec_seaso), height=0.5, width=0.5) +
+  theme_bw() + xlab('Easting (Km)') + ylab('Northing (Km)') +
+  coord_equal() +
+  ggtitle('prec_season')
+```
+
+```{r, dev='png'}
+ggplot(covardat) + 
+  geom_tile(aes(x.pos/1000, y.pos/1000, fill=dry_temp), height=0.5, width=0.5) +
+  theme_bw() + xlab('Easting (Km)') + ylab('Northing (Km)') +
+  coord_equal() +
+  ggtitle('dry_temp')
+```
+
+```{r, dev='png'}
+ggplot(covardat) + 
+  geom_tile(aes(x.pos/1000, y.pos/1000, fill=IVC_nam), height=0.5, width=0.5) +
+  theme_bw() + xlab('Easting (Km)') + ylab('Northing (Km)') +
+  coord_equal() +
+  ggtitle('IVC_nam')
+```
+
+```{r, dev='png'}
+ggplot(covardat) + 
+  geom_tile(aes(x.pos/1000, y.pos/1000, fill=et_temp), height=0.5, width=0.5) +
+  theme_bw() + xlab('Easting (Km)') + ylab('Northing (Km)') +
+  coord_equal() +
+  ggtitle('et_temp')
+```
+
+```{r, dev='png'}
+ggplot(covardat) + 
+  geom_tile(aes(x.pos/1000, y.pos/1000, fill=therm_nam), height=0.5, width=0.5) +
+  theme_bw() + xlab('Easting (Km)') + ylab('Northing (Km)') +
+  coord_equal() +
+  ggtitle('therm_nam')
+```
+
+```{r, dev='png'}
+ggplot(covardat) + 
+  geom_tile(aes(x.pos/1000, y.pos/1000, fill=forest_occ), height=0.5, width=0.5) +
+  theme_bw() + xlab('Easting (Km)') + ylab('Northing (Km)') +
+  coord_equal() +
+  ggtitle('forest_occ')
+```
+
+```{r, dev='png'}
+ggplot(covardat) + 
+  geom_tile(aes(x.pos/1000, y.pos/1000, fill=aridity), height=0.5, width=0.5) +
+  theme_bw() + xlab('Easting (Km)') + ylab('Northing (Km)') +
+  coord_equal() +
+  ggtitle('aridity')
+```
+
+```{r, dev='png'}
+ggplot(covardat) + 
+  geom_tile(aes(x.pos/1000, y.pos/1000, fill=tmean_7), height=0.5, width=0.5) +
+  theme_bw() + xlab('Easting (Km)') + ylab('Northing (Km)') +
+  coord_equal() +
+  ggtitle('tmean_7')
+```
+
+```{r, dev='png'}
+ggplot(covardat) + 
+  geom_tile(aes(x.pos/1000, y.pos/1000, fill=temp_an_ra), height=0.5, width=0.5) +
+  theme_bw() + xlab('Easting (Km)') + ylab('Northing (Km)') +
+  coord_equal() +
+  ggtitle('temp_an_ra')
+```
+
+```{r, dev='png'}
+ggplot(covardat) + 
+  geom_tile(aes(x.pos/1000, y.pos/1000, fill=isothermal), height=0.5, width=0.5) +
+  theme_bw() + xlab('Easting (Km)') + ylab('Northing (Km)') +
+  coord_equal() +
+  ggtitle('isothermal')
+```
+
+```{r, dev='png'}
+ggplot(covardat) + 
+  geom_tile(aes(x.pos/1000, y.pos/1000, fill=lith_nam), height=0.5, width=0.5) +
+  theme_bw() + xlab('Easting (Km)') + ylab('Northing (Km)') +
+  coord_equal() +
+  ggtitle('lith_nam')
+```
+
+```{r, dev='png'}
+ggplot(covardat) + 
+  geom_tile(aes(x.pos/1000, y.pos/1000, fill=max_temp_w), height=0.5, width=0.5) +
+  theme_bw() + xlab('Easting (Km)') + ylab('Northing (Km)') +
+  coord_equal() +
+  ggtitle('max_temp_w')
+```
+
+```{r, dev='png'}
+ggplot(covardat) + 
+  geom_tile(aes(x.pos/1000, y.pos/1000, fill=growth_per), height=0.5, width=0.5) +
+  theme_bw() + xlab('Easting (Km)') + ylab('Northing (Km)') +
+  coord_equal() +
+  ggtitle('growth_per')
+```
+
+```{r, dev='png'}
+ggplot(covardat) + 
+  geom_tile(aes(x.pos/1000, y.pos/1000, fill=river_dist ), height=0.5, width=0.5) +
+  theme_bw() + xlab('Easting (Km)') + ylab('Northing (Km)') +
+  coord_equal() +
+  ggtitle('river_dist ')
+```
+
+```{r, dev='png'}
+ggplot(covardat) + 
+  geom_tile(aes(x.pos/1000, y.pos/1000, fill=temp_seaso), height=0.5, width=0.5) +
+  theme_bw() + xlab('Easting (Km)') + ylab('Northing (Km)') +
+  coord_equal() +
+  ggtitle('temp_seaso')
+```
+
+```{r, dev='png'}
+ggplot(covardat) + 
+  geom_tile(aes(x.pos/1000, y.pos/1000, fill=altitude), height=0.5, width=0.5) +
+  theme_bw() + xlab('Easting (Km)') + ylab('Northing (Km)') +
+  coord_equal() +
+  ggtitle('altitude')
+```
+
+```{r, dev='png'}
+ggplot(covardat) + 
+  geom_tile(aes(x.pos/1000, y.pos/1000, fill=waterpoint), height=0.5, width=0.5) +
+  theme_bw() + xlab('Easting (Km)') + ylab('Northing (Km)') +
+  coord_equal() +
+  ggtitle('waterpoint')
+```
+
+
+Two variables are constant across the dataset:
+veg_type, rainmonths
+
+## Example of interpolating variables for the ele/roan tag data locations
+
+Testing using the waterpoint variable from the covariate shape file.  This seems to conflict with the waterpoint information give in the shapefile provided by Piet. 
+
+```{r}
+eles$testwaters<-akima::interpp(covardat$x.pos, covardat$y.pos, 
+                                covardat$waterpoint, 
+                                eles$x.pos, eles$y.pos, duplicate="mean")$z
+```
+
+```{r}
+require(fields)
+par(mfrow=c(1,2))
+quilt.plot(eles$x.pos, eles$y.pos, eles$mindistToWaters, asp=1, nrow=53, ncol=87, main='Piet Points')
+quilt.plot(eles$x.pos, eles$y.pos, eles$testwaters, asp=1, nrow=53, ncol=87, main='Morgan Data')
+```
+
