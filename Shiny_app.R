@@ -109,9 +109,15 @@ server <- function(input, output, session) {
                  group = 'fence') %>%
       addHeatmap(data=covardat, lng = ~coords.x1, lat = ~coords.x2, intensity = ~altitude,radius = 5 ,gradient = 'PuRd',
                  group = 'altitude') %>%
+      addHeatmap(data=covardat, lng = ~coords.x1, lat = ~coords.x2, intensity = ~river_dist*10,radius = 4 ,gradient = 'PuBu',
+                 group = 'rivers') %>%
+      addHeatmap(data=covardat, lng = ~coords.x1, lat = ~coords.x2, intensity = ~temp_seaso/10,radius = 4 ,gradient = 'PuOr',
+                 group = 'temperature') %>%
+      addHeatmap(data=covardat, lng = ~coords.x1, lat = ~coords.x2, intensity = ~veg_type,radius = 4 ,gradient = 'Green',
+                 group = "vegetation type") %>%
       #checkbox for covariates
       addLayersControl(
-        overlayGroups =c("water","fence","altitude"),
+        overlayGroups =c("water","fence","altitude","rivers","temperature","vegetation type"),
         options = layersControlOptions(collapsed=FALSE)
       )
   })
