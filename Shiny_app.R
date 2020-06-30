@@ -88,7 +88,7 @@ server <- function(input, output, session) {
       #heatmaps for the response variales
       addHeatmap(data = filteredData(), lng = ~x.pos, lat = ~y.pos, intensity = ~response, radius=5, gradient = 'Reds', blur = 10,
                  group = 'Response Ele') %>%
-      addHeatmap(data = filteredData2(), lng = ~x.pos, lat = ~y.pos, intensity = ~response, radius=5, gradient = 'Blues', blur = 10,
+      addHeatmap(data = filteredData2(), lng = ~x.pos, lat = ~y.pos, intensity = ~response, radius=5, gradient = 'Purples', blur = 10,
                  group = 'Response Roan') %>%
       
       #checkbox for response variables
@@ -103,9 +103,9 @@ server <- function(input, output, session) {
     leaflet() %>% addTiles() %>%
       
       #heatmaps for the covariates
-      addHeatmap(data=longlats, lng = ~x.pos, lat = ~y.pos, intensity = ~mindistToWaters/1000, radius = 6, gradient = 'Greys',
+      addHeatmap(data=longlats, lng = ~x.pos, lat = ~y.pos, intensity = ~mindistToWaters/1000, radius = 10, gradient = 'Blues',
                  group = 'water') %>%
-      addHeatmap(data=longlats, lng = ~x.pos, lat = ~y.pos, intensity = ~mindistToFence/1000, radius = 6, gradient = 'Greens',
+      addHeatmap(data=longlats, lng = ~x.pos, lat = ~y.pos, intensity = ~mindistToFence/1000, radius = 5, gradient = 'Greys',
                  group = 'fence') %>%
       addHeatmap(data=covardat, lng = ~coords.x1, lat = ~coords.x2, intensity = ~altitude,radius = 5 ,gradient = 'PuRd',
                  group = 'altitude') %>%
@@ -123,7 +123,7 @@ server <- function(input, output, session) {
       clearHeatmap() %>%
       addHeatmap(data=filteredData(), lng = ~x.pos, lat = ~y.pos, intensity = ~response, radius=5, gradient = 'Reds', blur = 10,
               group = 'Response Ele') %>%
-      addHeatmap(data=filteredData2(), lng = ~x.pos, lat = ~y.pos, intensity = ~response, radius=5, gradient = 'Blues', blur = 10,
+      addHeatmap(data=filteredData2(), lng = ~x.pos, lat = ~y.pos, intensity = ~response, radius=5, gradient = 'Purples', blur = 10,
                    group = 'Response Roan')
 })
     
