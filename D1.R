@@ -8,7 +8,7 @@ library(MuMIn)
 path<-'C:/Users/drago/Documents/R Projects/Disso'
 
 eles<-read.csv(paste('../elemydatuse.csv', sep=''))
-roan<-read.csv(paste('../roanmydatuse.csv', sep=''))
+#roan<-read.csv(paste('../roanmydatuse.csv', sep=''))
 
 grid_shape<-readOGR(paste(path, '/Khaudum_shapefiles', sep=''), layer='Khaudum_predgrid500m')
 predgrid<-grid_shape@data
@@ -99,7 +99,7 @@ salsa2dOutput<-runSALSA2D(bestModel1D, salsa2dlist,
 
 
 
-bestModel2D<-salsa2dOutput$bestModel
+bestModel2D_noint<-salsa2dOutput$bestModel
 
 
 
