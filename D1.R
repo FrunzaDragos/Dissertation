@@ -7,8 +7,8 @@ library(nlme)
 library(MuMIn)
 path<-'C:/Users/drago/Documents/R Projects/Disso'
 
-eles<-read.csv(paste('elemydatuse.csv', sep=''))
-roan<-read.csv(paste('roanmydatuse.csv', sep=''))
+eles<-read.csv(paste('../elemydatuse.csv', sep=''))
+roan<-read.csv(paste('../roanmydatuse.csv', sep=''))
 
 grid_shape<-readOGR(paste(path, '/Khaudum_shapefiles', sep=''), layer='Khaudum_predgrid500m')
 predgrid<-grid_shape@data
@@ -60,8 +60,12 @@ factorList <- c("yearmonth")
 varList <- c("mindistToWaters")
 
 #we are going to add x.pos and y.pos in the 2D model
+#salsa1dlist<-list(fitnessMeasure="QAIC", minKnots_1d = c(1),
+#                  maxKnots_1d=c(4), startKnots_1d = c(1), degree=c(2),
+#                  maxIterations=100, gaps=c(0))
+
 salsa1dlist<-list(fitnessMeasure="QAIC", minKnots_1d = c(1),
-                  maxKnots_1d=c(4), startKnots_1d = c(1), degree=c(2),
+                  maxKnots_1d=c(3), startKnots_1d = c(1), degree=c(2),
                   maxIterations=100, gaps=c(0))
 
 salsa1dout<-runSALSA1D(initialModel_eles, salsa1dlist, varList,
@@ -80,16 +84,23 @@ distMats <- makeDists(cbind(eles$x.pos, eles$y.pos),
                       na.omit(knotgrid))
 
 #min knots = the number ofr water holes
+#salsa2dlist<-list(fitnessMeasure = "QAIC", knotgrid = knotgrid,
+#                  startKnots=12, minKnots=12, maxKnots=20, gap=0,
+#                  interactionTerm="yearmonth")
+
 salsa2dlist<-list(fitnessMeasure = "QAIC", knotgrid = knotgrid,
-                  startKnots=12, minKnots=12, maxKnots=20, gap=0,
-                  interactionTerm="yearmonth")
+                  startKnots=4, minKnots=2, maxKnots=4, gap=0)
+
 
 salsa2dOutput<-runSALSA2D(bestModel1D, salsa2dlist,
                           d2k=distMats$dataDist, k2k=distMats$knotDist,
                           splineParams=NULL, tol=0, chooserad=F,
                           panels=NULL, suppress.printout=FALSE)
 
+
+
 bestModel2D<-salsa2dOutput$bestModel
+
 
 
 
