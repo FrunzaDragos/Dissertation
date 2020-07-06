@@ -51,11 +51,11 @@ library(MRSea)
 
 #from2018 lecture notes
 
-initialModel_eles <- glm(response ~ as.factor(yearmonth), 
+initialModel_eles <- glm(response ~ as.factor(year), 
                     offset=log(areakmsq), family=quasipoisson, 
                     data=eles)
 
-factorList <- c("yearmonth")
+factorList <- c("year")
 
 varList <- c("mindistToWaters")
 
@@ -88,8 +88,15 @@ distMats <- makeDists(cbind(eles$x.pos, eles$y.pos),
 #                  startKnots=12, minKnots=12, maxKnots=20, gap=0,
 #                  interactionTerm="yearmonth")
 
+#simplest model
 salsa2dlist<-list(fitnessMeasure = "QAIC", knotgrid = knotgrid,
                   startKnots=4, minKnots=2, maxKnots=4, gap=0)
+
+
+#simplest model with interaction term
+salsa2dlist<-list(fitnessMeasure = "QAIC", knotgrid = knotgrid,
+                  startKnots=4, minKnots=2, maxKnots=4, gap=0,
+                  interactionTerm = "year")
 
 
 salsa2dOutput<-runSALSA2D(bestModel1D, salsa2dlist,
@@ -98,8 +105,10 @@ salsa2dOutput<-runSALSA2D(bestModel1D, salsa2dlist,
                           panels=NULL, suppress.printout=FALSE)
 
 
+bestModel2D_int<-salsa2dOutput$bestModel
 
-bestModel2D_noint<-salsa2dOutput$bestModel
+vignette(topic='UsingMRSea_v1.0', package='MRSea')bestModel2D_noint<-salsa2dOutput$bestModel
+
 
 
 
