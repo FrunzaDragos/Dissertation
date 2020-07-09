@@ -110,8 +110,31 @@ bestModel2D_int<-salsa2dOutput$bestModel
 vignette(topic='UsingMRSea_v1.0', package='MRSea')bestModel2D_noint<-salsa2dOutput$bestModel
 
 
+#creating a knot location list from the locations of the water holes
+
+path<-'C:/Users/drago/Documents/R Projects/Disso'
+
+#read the shapefile
+w_holes_shape<-readOGR(dsn = paste(path,  '/Khaudum_shapefiles', sep=''), layer = 'All Khaudum Waters_Edit')
+w_holes_dat<-w_holes_shape@data
 
 
+#transform to longlat
+xy <- data.frame(ID = 1:nrow(w_holes_dat), X = w_holes_dat$X_COORD, Y = w_holes_dat$Y_COORD)
+coordinates(xy) <- c("X", "Y")
+proj4string(xy) <- CRS("+proj=longlat +datum=WGS84")  ## for example
+res <- spTransform(xy, CRS("+init=epsg:32733"))
+w_holes_dat$x.pos<- res@coords[,1]
+w_holes_dat$y.pos<- res@coords[,2]
+
+#removing the closed water holes
+w_holes_dat <- w_holes_dat[-c(9, 6, 2), ]
+
+knotgrid<- getKnotgrid(coordData = cbind(w_holes_dat$x.pos,
+                                         w_holes_dat$y.pos))
+
+distMats <- makeDists(cbind(eles$x.pos, eles$y.pos),
+                      na.omit(knotgrid))
 
 
 
