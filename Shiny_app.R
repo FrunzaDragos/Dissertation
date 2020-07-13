@@ -31,6 +31,14 @@ covardat$x.pos<- res@coords[,1]
 covardat$y.pos<- res@coords[,2]
 covardat$area<-0.25
 
+#read the shapefile for the water holes
+w_holes_shape<-readOGR(dsn = paste('../Disso/Khaudum_shapefiles', sep=''), layer = 'All Khaudum Waters_Edit')
+w_holes_dat<-w_holes_shape@data
+#removing the hole without coordinates and the closed ones
+w_holes_dat <- w_holes_dat[-c(9, 6, 2), ]
+#positions already in the right format
+
+
 #trasforming roan and elephant data to long-lat
 mapdata <- eles
 coordinates(mapdata) <- ~x.pos+y.pos #similar to SpatialPoints
@@ -44,6 +52,13 @@ proj4string(mapdata) <- CRS("+proj=utm +zone=33 +south") #assign projection and 
 longlats2 <- spTransform(mapdata, CRS("+proj=longlat")) #transform
 longlats2 <- as.data.frame(longlats2)
 
+#colour pallettes for the heatmaps and legends
+pal_rivers <- colorNumeric(palette = "PuBu", domain = covardat$river_dist*10)
+pal_altitude <- colorNumeric(palette = "PuRd", domain = covardat$altitude/5)
+pal_water <- colorNumeric(palette = "PuBu", domain = longlats$mindistToWaters/1000)
+pal_fence <- colorNumeric(palette = "PuBu", domain = longlats$mindistToFence/600)
+pal_temperature <- colorNumeric(palette = "PuOr", domain = covardat$temp_seaso/1000)
+pal_veg <- colorNumeric(palette = "Green", domain = covardat$veg_type)
 
 
 #ui
@@ -100,26 +115,52 @@ server <- function(input, output, session) {
   
   #building the covariate map
   output$covariate_map <- renderLeaflet({
+    
+    
     leaflet() %>% addTiles() %>%
       
+      #markers for the water hole postion according to the shapefiles
+      addMarkers(data=w_holes_dat, lng = ~X_COORD, lat = ~Y_COORD, popup = ~as.character(NAME), label = ~as.character(NAME),
+                 group = "water holes") %>%
+      
       #heatmaps for the covariates
-      addHeatmap(data=longlats, lng = ~x.pos, lat = ~y.pos, intensity = ~mindistToWaters/1000, radius = 10, gradient = 'Blues',
+      addHeatmap(data=longlats, lng = ~x.pos, lat = ~y.pos, intensity = ~mindistToWaters/1000, radius = 10, 
+                 gradient = 'Blues',
                  group = 'water') %>%
-      addHeatmap(data=longlats, lng = ~x.pos, lat = ~y.pos, intensity = ~mindistToFence/1000, radius = 5, gradient = 'Greys',
+      addHeatmap(data=longlats, lng = ~x.pos, lat = ~y.pos, intensity = ~mindistToFence/600, radius = 5, 
+                 gradient = 'Greys',
                  group = 'fence') %>%
-      addHeatmap(data=covardat, lng = ~coords.x1, lat = ~coords.x2, intensity = ~altitude,radius = 5 ,gradient = 'PuRd',
+      addHeatmap(data=covardat, lng = ~coords.x1, lat = ~coords.x2, intensity = ~altitude/5,radius = 5 ,
+                 gradient = 'PuRd',
                  group = 'altitude') %>%
-      addHeatmap(data=covardat, lng = ~coords.x1, lat = ~coords.x2, intensity = ~river_dist*10,radius = 4 ,gradient = 'PuBu',
+      addHeatmap(data=covardat, lng = ~coords.x1, lat = ~coords.x2, intensity = ~river_dist*10,radius = 4 ,
+                 gradient = "PuBu",
                  group = 'rivers') %>%
-      addHeatmap(data=covardat, lng = ~coords.x1, lat = ~coords.x2, intensity = ~temp_seaso/10,radius = 4 ,gradient = 'PuOr',
+      addHeatmap(data=covardat, lng = ~coords.x1, lat = ~coords.x2, intensity = ~temp_seaso/1000,radius = 8 ,
+                 gradient = 'PuOr',
                  group = 'temperature') %>%
-      addHeatmap(data=covardat, lng = ~coords.x1, lat = ~coords.x2, intensity = ~veg_type,radius = 4 ,gradient = 'Green',
+      addHeatmap(data=covardat, lng = ~coords.x1, lat = ~coords.x2, intensity = ~veg_type,radius = 4 ,
+                 gradient = 'Green',
                  group = "vegetation type") %>%
+      addLegend( position = "bottomleft", pal = pal_rivers, values =  covardat$river_dist*10, title="Heat map legend",
+                 group = 'rivers') %>%
+      addLegend( position = "bottomleft", pal = pal_altitude, values =  covardat$altitude/5, title="Heat map legend",
+                 group = 'altitude') %>%
+      addLegend( position = "bottomright", pal = pal_temperature, values =  covardat$temp_seaso/1000, title="Heat map legend",
+                 group = 'temperature') %>%
+      addLegend( position = "bottomleft", pal = pal_veg, values =  covardat$veg_type, title="Heat map legend",
+                 group = 'vegetation type') %>%
+      
+      
       #checkbox for covariates
       addLayersControl(
+        baseGroups = c("water holes"),
         overlayGroups =c("water","fence","altitude","rivers","temperature","vegetation type"),
         options = layersControlOptions(collapsed=FALSE)
-      )
+      ) %>%
+      
+      #start with the groups unchecked
+      hideGroup(c("water","fence","altitude","rivers","temperature","vegetation type","water holes"))
   })
 
   
@@ -134,14 +175,6 @@ server <- function(input, output, session) {
 })
     
 }
-
-#observe({
-#  leafletProxy("mymap") %>%
-#    addLayersControl(
-#      overlayGroups =c("Response","water","fence","altitude"),
-#      options = layersControlOptions(collapsed=FALSE)
-#    )
-#})
 
 
 shinyApp(ui, server)
